@@ -2,7 +2,6 @@ python==3.11.5
 streamlit
 pandas
 numpy
-TIME-python
 matplotlib
 shap
 st-gsheets-connection
@@ -10,3 +9,6 @@ xgboost
 ipython
 
 # pickle 5 have been installed within python
+# time have been included within python
+# python version recommendation 3.11.5 more than that cannot
+# on streamlit dont need python==3.11.5
