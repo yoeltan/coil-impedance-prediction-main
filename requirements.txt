@@ -1,8 +1,6 @@
-python==3.11.5
 streamlit
 pandas
 numpy
-TIME-python
 matplotlib
 shap
 st-gsheets-connection
