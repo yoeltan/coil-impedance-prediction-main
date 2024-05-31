@@ -27,3 +27,10 @@ st.write(dataset_impedance)
 
 st.title('Dataset Tolerance')
 st.write(dataset_tolerance)
+
+# from ydata_profiling import ProfileReport
+# # Generate the profiling report
+# prof = ProfileReport(dataset_impedance, explorative=True, minimal=True)
+
+# # Save the report as an HTML file
+# output = prof.to_file('output.html', silent=False)
