@@ -141,12 +141,11 @@ if submitted:
             modify_testing(test_data_imp, column, i, impedance)
 
     save_imp = pd.DataFrame(suggestion_imp)
-    save_tol = pd.DataFrame(suggestion_tol)
     
     st.subheader("Suggestion Impedance")
     st.dataframe(save_imp.style.highlight_max(axis=0))
 
-    save = pd.concat([save_imp, save_tol], ignore_index=True)
+    save = pd.concat([save_imp], ignore_index=True)
 
     insert_data(save)
 
