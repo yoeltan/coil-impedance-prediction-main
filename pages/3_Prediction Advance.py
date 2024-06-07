@@ -8,7 +8,7 @@ def get_data() -> pd.DataFrame:
     return conn.read(
         worksheet="prediction_advance",
         ttl=0, 
-        usecols=[i for i in range(0,16)]
+        usecols=[i for i in range(0,17)]
         ).dropna()
 
 def insert_data(new_data):
@@ -88,7 +88,27 @@ with st.form(key='input_form'):
 
 suggestion = pd.DataFrame()
 
-def calculating(df, ori_imp, columns_adjusted):
+def value_duplicates(data_modified, data_ori):
+    # Daftar untuk menyimpan kolom yang termodifikasi
+    columns_edited = []
+
+    # Loop melalui kolom
+    for col in data_ori.columns:
+        # Bandingkan nilai
+        if not data_ori[col].equals(data_modified[col]):
+            # Identifikasi indeks baris yang termodifikasi
+            for i in range(len(data_ori)):
+                if data_ori[col][i] != data_modified[col][i]:
+                    if (data_ori[col][i] > data_modified[col][i]):
+                        # Tambahkan kolom yang termodifikasi ke dalam daftar
+                        columns_edited.append(col + " -" + str(data_ori[col][i] - data_modified[col][i]))
+                    elif(data_ori[col][i] < data_modified[col][i]):
+                        # Tambahkan kolom yang termodifikasi ke dalam daftar
+                        columns_edited.append(col + " " + str(data_modified[col][i] - data_ori[col][i]))
+
+    return columns_edited
+
+def calculating(df, ori_imp, data_ori):
     
     impedance = predictImpedance(df)
 
@@ -97,94 +117,82 @@ def calculating(df, ori_imp, columns_adjusted):
     if (ori_imp > 0):
         if ((ori_imp - impedance) > 0):
             save = pd.DataFrame(df, index=[0])
+            save['Columns Adjusted'] = [value_duplicates(save, data_ori)]
             save['Original Impedance'] = ori_imp
             save['Predicted Impedance'] = impedance
             save['Difference'] = [ori_imp - impedance]
-            save['Columns Adjusted'] = [columns_adjusted]
+            # save['Columns Adjusted'] = [columns_adjusted]
 
             suggestion = pd.concat([suggestion, save], ignore_index=True)
     else:
         if ((impedance - ori_imp) > 0):
             save = pd.DataFrame(df, index=[0])
+            save['Columns Adjusted'] = [value_duplicates(save, data_ori)]
             save['Original Impedance'] = ori_imp
             save['Predicted Impedance'] = impedance
             save['Difference'] = [impedance - ori_imp]
-            save['Columns Adjusted'] = [columns_adjusted]
-            
+            # save['Columns Adjusted'] = [columns_adjusted]
+
             suggestion = pd.concat([suggestion, save], ignore_index=True)
         
-
     return df
 
 def reset_value(df, column, original_value):
     df.at[0, column] = original_value
 
-def modify_and_test_v1(df, columns, value_range, impedance, x, columns_edited):
+def modify_and_test_v1(df, columns, value_range, impedance, x, data_ori):
     num_columns = len(columns)
 
     for i in value_range:
         if(columns[x] == columns[0]):
             with status:
                 st.write(f'Calculating Layer {x}: {columns[x]} {i:.2f}')
-        
-        columns_original = columns_edited
-        columns_edited.append(columns[x]+str(i))
                    
         original_value1 = df.at[0, columns[x]]
         df.at[0, columns[x]] = df.at[0, columns[x]] + i
-        calculating(df, impedance, columns_edited)
+        calculating(df, impedance, data_ori)
 
         x += 1
 
         if x < num_columns:
-            modify_and_test_v1(df, columns, value_range, impedance, x, columns_edited)
+            modify_and_test_v1(df, columns, value_range, impedance, x, data_ori)
          
         x -= 1
 
         reset_value(df, columns[x], original_value1)
-        calculating(df, impedance, columns_edited)
+        calculating(df, impedance, data_ori)
 
-        columns_edited = columns_original
-
-def modify_and_test_v2(df, columns, value_range, impedance, x, columns_edited):
+def modify_and_test_v2(df, columns, value_range, impedance, x, data_ori):
     num_columns = len(columns)
 
     for i in value_range:
         if(columns[x] == columns[num_columns-1]):
             with status:
                 st.write(f'Calculating Layer {x}: {columns[x]} {i:.2f}')
-
-        columns_original = columns_edited
-        columns_edited.append(columns[x]+str(i))
         
         original_value1 = df.at[0, columns[x]]
         df.at[0, columns[x]] = df.at[0, columns[x]] + i
-        calculating(df, impedance, columns_edited)
+        calculating(df, impedance, data_ori)
 
         x -= 1
 
         if x > -1:
-            modify_and_test_v2(df, columns, value_range, impedance, x, columns_edited)
+            modify_and_test_v2(df, columns, value_range, impedance, x, data_ori)
          
         x += 1
 
         reset_value(df, columns[x], original_value1)
-        calculating(df, impedance, columns_edited)
+        calculating(df, impedance, data_ori)
 
-        columns_edited = columns_original
-
-def modify_and_test_v3(df, columns, value_range, impedance, x, columns_edited):
+def modify_and_test_v3(df, columns, value_range, impedance, x, data_ori):
 
     for i in value_range:
         for column in columns:
-            columns_original = columns_edited
-            columns_edited.append(columns[x]+str(i))
 
             original_value1 = df.at[0, column]
             df.at[0, column] = df.at[0, column] + i
-            calculating(df, impedance, columns_edited)
+            calculating(df, impedance, data_ori)
             reset_value(df, column, original_value1)
-            columns_edited = columns_original
 
 def columns_checker(columns_name):
     columns = []
@@ -203,6 +211,8 @@ if submitted:
     st.subheader('Input Data')
     st.dataframe(test_data_imp)
 
+    data_ori = input_data[modelImpedance.feature_names_in_]
+
     # ! PREDICT IMPEDANCE
     impedance = predictImpedance(test_data_imp)
     st.write(f'The predicted impedance is {impedance:.2f} ohms')
@@ -217,19 +227,15 @@ if submitted:
     columns = columns_checker(columns)
     ranges = range(input_data.iloc[0, 12], input_data.iloc[0, 13] + 1)
 
-    columns_edited = []
     x = 0
     # Call the function
-    modify_and_test_v1(test_data_imp, columns,
-                    ranges, impedance, x, columns_edited)
+    modify_and_test_v1(test_data_imp, columns, ranges, impedance, x, data_ori)
     
-    modify_and_test_v3(test_data_imp, columns,
-                    ranges, impedance, x, columns_edited)
+    modify_and_test_v3(test_data_imp, columns, ranges, impedance, x, data_ori)
     
     num_columns = len(columns)
     # Call the function
-    modify_and_test_v2(test_data_imp, columns,
-                    ranges, impedance, num_columns - 1, columns_edited)
+    modify_and_test_v2(test_data_imp, columns, ranges, impedance, num_columns - 1, data_ori)
 
     suggestion=suggestion.drop_duplicates(subset=['Inner Diameter Length LV', 'Inner Diameter Width LV', 'Inner Diameter Height LV',
                                       'Outer Diameter Length LV', 'Outer Diameter Width LV', 'Outer Diameter Height LV',

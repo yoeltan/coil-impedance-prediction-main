@@ -77,7 +77,6 @@ with st.form(key='input_form'):
     submitted = st.form_submit_button(label='Predict Impedance')
 
 suggestion_imp = []
-suggestion_tol = []
 
 def modify_testing(df, column, adjusted, ori_imp):
     original_value = df.at[0, column]
