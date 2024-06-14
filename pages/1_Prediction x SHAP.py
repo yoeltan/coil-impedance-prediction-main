@@ -133,45 +133,71 @@ st.set_page_config(
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-dataset_impedance = conn.read(
-        worksheet="dataset_impedance",
-        ttl=0, 
-        usecols=[i for i in range(0, 12)]
-    ).dropna()
-
 with open('models/xgb.pkl', 'rb') as file:
     modelImpedance = pickle.load(file) 
-
-# Load Dataset Impedance
-    dataset = pd.DataFrame(dataset_impedance)
-    dataset_impedance = dataset[modelImpedance.feature_names_in_]
 
 summary = pd.DataFrame()
 
 st.title('Coil Impedance Prediction')
+if 'error_msg' not in st.session_state:
+    st.session_state['error_msg'] = "Please fill required inputs"
+
+# Validation function
+def validate_inputs():
+    # Diameter Length
+    if st.session_state['Inner Diameter Length LV'] >= st.session_state['Outer Diameter Length LV']:
+        st.session_state['error_msg'] = "'Outer Diameter Length LV' must be greater than 'Inner Diameter Length LV'"
+    elif st.session_state['Outer Diameter Length LV'] >= st.session_state['Inner Diameter Length HV']:
+        st.session_state['error_msg'] = "'Inner Diameter Length HV' must be greater than 'Outer Diameter Length LV'"    
+    elif st.session_state['Inner Diameter Length HV'] >= st.session_state['Outer Diameter Length HV']:
+        st.session_state['error_msg'] = "'Outer Diameter Length HV' must be greater than 'Inner Diameter Length HV'"
+    # Diameter Width
+    elif st.session_state['Inner Diameter Width LV'] >= st.session_state['Outer Diameter Width LV']:
+        st.session_state['error_msg'] = "'Outer Diameter Width LV' must be greater than 'Inner Diameter Width LV'"
+    elif st.session_state['Outer Diameter Width LV'] >= st.session_state['Inner Diameter Width HV']:
+        st.session_state['error_msg'] = "'Inner Diameter Width HV' must be greater than 'Outer Diameter Width LV'"
+    elif st.session_state['Inner Diameter Width HV'] >= st.session_state['Outer Diameter Width HV']:
+        st.session_state['error_msg'] = "'Outer Diameter Width HV' must be grater than 'Inner Diameter Width HV'"
+    # Diameter Height
+    elif (st.session_state['Inner Diameter Height LV'] < 135 or
+        st.session_state['Outer Diameter Height LV'] < 135 or
+        st.session_state['Inner Diameter Height HV'] < 135 or
+        st.session_state['Outer Diameter Height HV'] < 135):
+        st.session_state['error_msg'] = "'Inner, Outer Diameter Height LV, HV' must be grater than 134 mm"
+    else:
+        st.session_state['error_msg'] = ""
+
+# Display error message if validation fails
+if st.session_state['error_msg']:
+    st.error(st.session_state['error_msg'])
+
+left, right = st.columns(2)
 with st.form(key='input_form'):
-    left, right = st.columns(2)
     params = {
-        'Inner Diameter Length LV' : int(left.number_input('Inner Diameter Length LV')),
-        'Inner Diameter Width LV': int(left.number_input('Inner Diameter Width LV')),
-        'Inner Diameter Height LV': int(left.number_input('Inner Diameter Height LV')),
+        'Inner Diameter Length LV' : int(left.number_input('Inner Diameter Length LV', min_value=0, on_change=validate_inputs, key='Inner Diameter Length LV')),
+        'Inner Diameter Width LV': int(left.number_input('Inner Diameter Width LV', min_value=0, on_change=validate_inputs, key='Inner Diameter Width LV')),
+        'Inner Diameter Height LV': int(left.number_input('Inner Diameter Height LV', min_value=0, on_change=validate_inputs, key='Inner Diameter Height LV')),
 
-        'Outer Diameter Length LV': int(left.number_input('Outer Diameter Length  LV')),
-        'Outer Diameter Width LV': int(left.number_input('Outer Diameter Width LV')),
-        'Outer Diameter Height LV': int(left.number_input('Outer Diameter Height LV')),
+        'Outer Diameter Length LV': int(left.number_input('Outer Diameter Length  LV', min_value=0, on_change=validate_inputs, key='Outer Diameter Length LV')),
+        'Outer Diameter Width LV': int(left.number_input('Outer Diameter Width LV', min_value=0, on_change=validate_inputs, key='Outer Diameter Width LV')),
+        'Outer Diameter Height LV': int(left.number_input('Outer Diameter Height LV', min_value=0, on_change=validate_inputs, key='Outer Diameter Height LV')),
 
-        'Inner Diameter Length HV': int(right.number_input('Inner Diameter Length HV')),
-        'Inner Diameter Width HV': int(right.number_input('Inner Diameter Width HV')),
-        'Inner Diameter Height HV': int(right.number_input('Inner Diameter Height HV')),
+        'Inner Diameter Length HV': int(right.number_input('Inner Diameter Length HV', min_value=0, on_change=validate_inputs, key='Inner Diameter Length HV')),
+        'Inner Diameter Width HV': int(right.number_input('Inner Diameter Width HV', min_value=0, on_change=validate_inputs, key='Inner Diameter Width HV')),
+        'Inner Diameter Height HV': int(right.number_input('Inner Diameter Height HV', min_value=0, on_change=validate_inputs, key='Inner Diameter Height HV')),
 
-        'Outer Diameter Length HV': int(right.number_input('Outer Diameter Length HV')),
-        'Outer Diameter Width HV': int(right.number_input('Outer Diameter Width HV')),
-        'Outer Diameter Height HV': int(right.number_input('Outer Diameter Height HV')),
+        'Outer Diameter Length HV': int(right.number_input('Outer Diameter Length HV', min_value=0, on_change=validate_inputs, key='Outer Diameter Length HV')),
+        'Outer Diameter Width HV': int(right.number_input('Outer Diameter Width HV', min_value=0, on_change=validate_inputs, key='Outer Diameter Width HV')),
+        'Outer Diameter Height HV': int(right.number_input('Outer Diameter Height HV', min_value=0, on_change=validate_inputs, key='Outer Diameter Height HV')),
 
-        'ADJUSTED': int(right.number_input('ADJUSTED', format='%.0f')),
+        'ADJUSTED': int(right.number_input('ADJUSTED', min_value=-10, on_change=validate_inputs)),
     }
 
-    submitted = st.form_submit_button(label='Predict Impedance')
+    # Initial placeholder for the submit button
+    if st.session_state['error_msg']:
+        submitted = st.form_submit_button(label='Predict Impedance', disabled=True)
+    else:
+        submitted = st.form_submit_button(label='Predict Impedance')
 
 def modify_and_restore(df, column, adjusted, ori_imp):
     
@@ -203,7 +229,17 @@ def modify_and_restore(df, column, adjusted, ori_imp):
 
     st.divider()
 
-if submitted:
+if submitted and not st.session_state['error_msg']:
+    dataset_impedance = conn.read(
+        worksheet="dataset_impedance",
+        ttl=0, 
+        usecols=[i for i in range(0, 12)]
+    ).dropna()
+
+    # Load Dataset Impedance
+    dataset = pd.DataFrame(dataset_impedance)
+    dataset_impedance = dataset[modelImpedance.feature_names_in_]
+
     status = st.status('Processing...', expanded=True)
     
     # Load Dataset Impedance
