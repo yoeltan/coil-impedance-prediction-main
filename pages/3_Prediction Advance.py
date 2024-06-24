@@ -120,9 +120,8 @@ with st.form(key='input_form'):
     else:
         submitted = st.form_submit_button(label='Predict Impedance')
 
-    
-
-suggestion = pd.DataFrame()
+suggestion_imp_larger = pd.DataFrame()
+suggestion_imp_smaller = pd.DataFrame()
 
 def value_duplicates(data_modified, data_ori):
     # Daftar untuk menyimpan kolom yang termodifikasi
@@ -148,28 +147,29 @@ def calculating(df, ori_imp, data_ori):
     
     impedance = predictImpedance(df)
 
-    global suggestion
+    global suggestion_imp_larger
+    global suggestion_imp_smaller
 
-    if (ori_imp > 0):
-        if ((ori_imp - impedance) > 0):
-            save = pd.DataFrame(df, index=[0])
-            save['Columns Adjusted'] = [value_duplicates(save, data_ori)]
-            save['Original Impedance'] = ori_imp
-            save['Predicted Impedance'] = impedance
-            save['Difference'] = [ori_imp - impedance]
-            # save['Columns Adjusted'] = [columns_adjusted]
+    # smaller semakin mendekati 0
+    if (ori_imp > impedance):
+        save1 = pd.DataFrame(df, index=[0])
+        save1['Columns Adjusted'] = [value_duplicates(save1, data_ori)]
+        save1['Original Impedance'] = ori_imp
+        save1['Predicted Impedance'] = impedance
+        save1['Difference'] = [ori_imp - impedance]
+        # save['Columns Adjusted'] = [columns_adjusted]
 
-            suggestion = pd.concat([suggestion, save], ignore_index=True)
-    else:
-        if ((impedance - ori_imp) > 0):
-            save = pd.DataFrame(df, index=[0])
-            save['Columns Adjusted'] = [value_duplicates(save, data_ori)]
-            save['Original Impedance'] = ori_imp
-            save['Predicted Impedance'] = impedance
-            save['Difference'] = [impedance - ori_imp]
-            # save['Columns Adjusted'] = [columns_adjusted]
+        suggestion_imp_smaller = pd.concat([suggestion_imp_smaller, save1], ignore_index=True)
 
-            suggestion = pd.concat([suggestion, save], ignore_index=True)
+    elif (ori_imp < impedance):
+        save2 = pd.DataFrame(df, index=[0])
+        save2['Columns Adjusted'] = [value_duplicates(save2, data_ori)]
+        save2['Original Impedance'] = ori_imp
+        save2['Predicted Impedance'] = impedance
+        save2['Difference'] = [impedance - ori_imp]
+        # save['Columns Adjusted'] = [columns_adjusted]
+
+        suggestion_imp_larger = pd.concat([suggestion_imp_larger, save2], ignore_index=True)
         
     return df
 
@@ -251,7 +251,7 @@ if submitted:
 
     # ! PREDICT IMPEDANCE
     impedance = predictImpedance(test_data_imp)
-    st.write(f'The predicted impedance is {impedance:.2f} ohms')
+    st.write(f'The predicted impedance is {impedance:.2f}%')
 
     # Define column names and ranges
     # List of columns to modify
@@ -273,14 +273,21 @@ if submitted:
     # Call the function
     modify_and_test_v2(test_data_imp, columns, ranges, impedance, num_columns - 1, data_ori)
 
-    suggestion=suggestion.drop_duplicates(subset=['Inner Diameter Length LV', 'Inner Diameter Width LV', 'Inner Diameter Height LV',
+    suggestion_imp_smaller=suggestion_imp_smaller.drop_duplicates(subset=['Inner Diameter Length LV', 'Inner Diameter Width LV', 'Inner Diameter Height LV',
                                       'Outer Diameter Length LV', 'Outer Diameter Width LV', 'Outer Diameter Height LV',
                                       'Inner Diameter Length HV', 'Inner Diameter Width HV', 'Inner Diameter Height HV',
                                       'Outer Diameter Length HV', 'Outer Diameter Width HV', 'Outer Diameter Height HV'], keep='last')
 
-    st.dataframe(suggestion)
+    suggestion_imp_larger=suggestion_imp_larger.drop_duplicates(subset=['Inner Diameter Length LV', 'Inner Diameter Width LV', 'Inner Diameter Height LV',
+                                      'Outer Diameter Length LV', 'Outer Diameter Width LV', 'Outer Diameter Height LV',
+                                      'Inner Diameter Length HV', 'Inner Diameter Width HV', 'Inner Diameter Height HV',
+                                      'Outer Diameter Length HV', 'Outer Diameter Width HV', 'Outer Diameter Height HV'], keep='last')
 
-    insert_data(suggestion)
+
+    st.dataframe(suggestion_imp_smaller)
+    st.dataframe(suggestion_imp_larger)
+
+    insert_data(suggestion_imp_smaller)
 
     with status:
         status.update(label="Process Complete!", state="complete", expanded=False)

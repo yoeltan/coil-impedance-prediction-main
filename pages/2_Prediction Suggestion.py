@@ -186,7 +186,7 @@ if submitted:
 
     # ! PREDICT IMPEDANCE
     impedance = predictImpedance(test_data_imp)
-    st.write(f'The predicted impedance is {impedance:.2f} ohms')
+    st.write(f'The predicted impedance is {impedance:.2f}%')
 
     st.divider()
 
