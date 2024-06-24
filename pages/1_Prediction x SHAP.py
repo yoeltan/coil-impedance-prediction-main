@@ -174,23 +174,23 @@ if st.session_state['error_msg']:
 left, right = st.columns(2)
 with st.form(key='input_form'):
     params = {
-        'Inner Diameter Length LV' : float(left.number_input('Inner Diameter Length LV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Inner Diameter Length LV')),
-        'Inner Diameter Width LV': float(left.number_input('Inner Diameter Width LV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Inner Diameter Width LV')),
-        'Inner Diameter Height LV': float(left.number_input('Inner Diameter Height LV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Inner Diameter Height LV')),
+        'Inner Diameter Length LV' : int(left.number_input('Inner Diameter Length LV', min_value=0, on_change=validate_inputs, key='Inner Diameter Length LV')),
+        'Inner Diameter Width LV': int(left.number_input('Inner Diameter Width LV', min_value=0, on_change=validate_inputs, key='Inner Diameter Width LV')),
+        'Inner Diameter Height LV': int(left.number_input('Inner Diameter Height LV', min_value=0, on_change=validate_inputs, key='Inner Diameter Height LV')),
 
-        'Outer Diameter Length LV': float(left.number_input('Outer Diameter Length  LV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Outer Diameter Length LV')),
-        'Outer Diameter Width LV': float(left.number_input('Outer Diameter Width LV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Outer Diameter Width LV')),
-        'Outer Diameter Height LV': float(left.number_input('Outer Diameter Height LV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Outer Diameter Height LV')),
+        'Outer Diameter Length LV': int(left.number_input('Outer Diameter Length  LV', min_value=0, on_change=validate_inputs, key='Outer Diameter Length LV')),
+        'Outer Diameter Width LV': int(left.number_input('Outer Diameter Width LV', min_value=0, on_change=validate_inputs, key='Outer Diameter Width LV')),
+        'Outer Diameter Height LV': int(left.number_input('Outer Diameter Height LV', min_value=0, on_change=validate_inputs, key='Outer Diameter Height LV')),
 
-        'Inner Diameter Length HV': float(right.number_input('Inner Diameter Length HV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Inner Diameter Length HV')),
-        'Inner Diameter Width HV': float(right.number_input('Inner Diameter Width HV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Inner Diameter Width HV')),
-        'Inner Diameter Height HV': float(right.number_input('Inner Diameter Height HV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Inner Diameter Height HV')),
+        'Inner Diameter Length HV': int(right.number_input('Inner Diameter Length HV', min_value=0, on_change=validate_inputs, key='Inner Diameter Length HV')),
+        'Inner Diameter Width HV': int(right.number_input('Inner Diameter Width HV', min_value=0, on_change=validate_inputs, key='Inner Diameter Width HV')),
+        'Inner Diameter Height HV': int(right.number_input('Inner Diameter Height HV', min_value=0, on_change=validate_inputs, key='Inner Diameter Height HV')),
 
-        'Outer Diameter Length HV': float(right.number_input('Outer Diameter Length HV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Outer Diameter Length HV')),
-        'Outer Diameter Width HV': float(right.number_input('Outer Diameter Width HV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Outer Diameter Width HV')),
-        'Outer Diameter Height HV': float(right.number_input('Outer Diameter Height HV', format="%.2f", min_value=0.0, on_change=validate_inputs, key='Outer Diameter Height HV')),
+        'Outer Diameter Length HV': int(right.number_input('Outer Diameter Length HV', min_value=0, on_change=validate_inputs, key='Outer Diameter Length HV')),
+        'Outer Diameter Width HV': int(right.number_input('Outer Diameter Width HV', min_value=0, on_change=validate_inputs, key='Outer Diameter Width HV')),
+        'Outer Diameter Height HV': int(right.number_input('Outer Diameter Height HV', min_value=0, on_change=validate_inputs, key='Outer Diameter Height HV')),
 
-        'ADJUSTED': float(right.number_input('ADJUSTED', format="%.2f", min_value=-10.0, on_change=validate_inputs)),
+        'ADJUSTED': int(right.number_input('ADJUSTED', min_value=-10, on_change=validate_inputs)),
     }
 
     # Initial placeholder for the submit button

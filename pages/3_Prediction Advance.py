@@ -283,8 +283,10 @@ if submitted:
                                       'Inner Diameter Length HV', 'Inner Diameter Width HV', 'Inner Diameter Height HV',
                                       'Outer Diameter Length HV', 'Outer Diameter Width HV', 'Outer Diameter Height HV'], keep='last')
 
-
+    st.subheader("Suggestion - Impedance Smaller")
     st.dataframe(suggestion_imp_smaller)
+
+    st.subheader("Suggestion - Impedance Larger")
     st.dataframe(suggestion_imp_larger)
 
     insert_data(suggestion_imp_smaller)
