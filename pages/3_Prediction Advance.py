@@ -41,7 +41,7 @@ st.set_page_config(
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-with open('models/xgb.pkl', 'rb') as file:
+with open('models/xgb_newKVA.pkl', 'rb') as file:
     modelImpedance = pickle.load(file) 
 
 st.title('Coil Impedance Prediction')
